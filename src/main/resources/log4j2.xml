@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>	
+<Configuration status="off">
+	<!-- Properties can use the value of name as a variable -->.
+	<Properties>
+		<Property name="logformat">%d{yyyy/MM/dd HH:mm:ss.SSS} %c{100} [%t] %-6p %m%n</Property>
+		<Property name="logshort">%d{yyyy/MM/dd HH:mm:ss.SSS},%-6p,%c{1},%m%n</Property>
+		<Property name="logfile">./item_replacer.log</Property>
+		<Property name="logfile-archive">>./item_replacer_%d{yyyy-MM-dd}-%i.log</Property>
+	</Properties>
+	
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout>
+				<pattern>${logshort}</pattern>
+			</PatternLayout>
+		</Console>
+
+		<RollingFile name="rolling" append="true" fileName="${logfile}" filePattern="${logfile-archive}">
+			<PatternLayout>
+				<pattern>${logformat}</pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10 MB"/>
+			</Policies>
+			<DefaultRolloverStrategy max="5"/>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="debug">
+			<AppenderRef ref="Console" level="info" />
+			<AppenderRef ref="rolling" level="debug" />
+		</Root>t
+	</Loggers>
+</Configuration>
