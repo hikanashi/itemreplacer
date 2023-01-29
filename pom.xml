@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.jamasoftware.services</groupId>
@@ -41,24 +41,24 @@
     </dependency>
   </dependencies>
 
-	<build>
-		<plugins>
+  <build>
+    <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.0.2</version>
         <configuration>
-            <archive>
-                <manifest>
-                    <mainClass>${project.groupId}.${project.artifactId}.App</mainClass>
-                    <addClasspath>true</addClasspath>
-                </manifest>
-            </archive>
+          <archive>
+            <manifest>
+              <mainClass>${project.groupId}.${project.artifactId}.App</mainClass>
+              <addClasspath>true</addClasspath>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.0</version>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
             <id>make-assembly</id>
@@ -69,14 +69,14 @@
             <configuration>
               <outputDirectory>${project.build.directory}/package</outputDirectory>
               <descriptorRefs>
-                  <descriptorRef>jar-with-dependencies</descriptorRef>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
               </descriptorRefs>
               <archive>
                 <manifest>
                   <mainClass>${project.groupId}.${project.artifactId}.App</mainClass>
                 </manifest>
               </archive>
-				    </configuration>
+            </configuration>
           </execution>
           <execution>
             <id>make-package</id>
@@ -93,10 +93,10 @@
                   <mainClass>${project.groupId}.${project.artifactId}.App</mainClass>
                 </manifest>
               </archive>
-				    </configuration>
+            </configuration>
           </execution>
         </executions>
-			</plugin>
-		</plugins>
-	</build>
+      </plugin>
+    </plugins>
+  </build>
 </project>

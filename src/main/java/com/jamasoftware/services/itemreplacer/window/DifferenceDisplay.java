@@ -15,11 +15,11 @@ import javax.swing.border.Border;
 import com.jamasoftware.services.itemreplacer.Jamamodel.JamaTableItem;
 
 public class DifferenceDisplay extends JFrame {
- 
+
     private GridBagLayout layout_;
     private JEditorPane srcPanel_;
     private JEditorPane dstPanel_;
-    private String replaceKey_= null;
+    private String replaceKey_ = null;
     private JamaTableItem item_ = null;
 
     public DifferenceDisplay() {
@@ -29,7 +29,7 @@ public class DifferenceDisplay extends JFrame {
 
     private void buildGUI() {
         layout_ = new GridBagLayout();
-		this.setLayout(layout_);
+        this.setLayout(layout_);
 
         setTitle("Different View");
         setBounds(0, 0, 810, 810);
@@ -45,31 +45,31 @@ public class DifferenceDisplay extends JFrame {
     }
 
     public void setVisibleTop(boolean visible) {
-        if(visible) {
+        if (visible) {
             setAlwaysOnTop(true);
         }
 
         setEnabled(visible);
         setVisible(visible);
         setAlwaysOnTop(false);
-        
+
     }
 
     private JSeparator buildSeparator() {
         JSeparator separator = new JSeparator(JSeparator.VERTICAL);
         // Dimension size = getSize();
-        // separator.setPreferredSize(new Dimension(10,  size.height));
+        // separator.setPreferredSize(new Dimension(10, size.height));
         Border border = new BevelBorder(BevelBorder.RAISED);
-		separator.setBorder(border);
+        separator.setBorder(border);
 
         return separator;
     }
 
     private JEditorPane buildDataView() {
 
-        JEditorPane panel = new JEditorPane("text/html","");
+        JEditorPane panel = new JEditorPane("text/html", "");
         panel.setEditable(false);
-        panel.setPreferredSize(new Dimension(400,  800));
+        panel.setPreferredSize(new Dimension(400, 800));
 
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setViewportView(panel);
@@ -83,21 +83,20 @@ public class DifferenceDisplay extends JFrame {
         constraints.gridwidth = gridwidth;
         constraints.gridheight = gridheight;
         layout_.setConstraints(comp, constraints);
-        this.add(comp);      
+        this.add(comp);
     }
-
 
     public void setItem(Object item, String key) {
         String type = "text/html";
 
-        item_ = (JamaTableItem)item;
-        if(item_ == null) {
-            updateContent(srcPanel_,type, "");
-            updateContent(dstPanel_,type, "");
+        item_ = (JamaTableItem) item;
+        if (item_ == null) {
+            updateContent(srcPanel_, type, "");
+            updateContent(dstPanel_, type, "");
             return;
         }
 
-        setReplaceKey(key);        
+        setReplaceKey(key);
     }
 
     private void updateContent(JEditorPane panel, String type, String value) {
@@ -110,14 +109,13 @@ public class DifferenceDisplay extends JFrame {
 
     public void setReplaceKey(String key) {
         replaceKey_ = key;
-        
-        if(item_ == null) {
+
+        if (item_ == null) {
             return;
         }
 
         String destValue = item_.getReplaceData(replaceKey_);
         srcPanel_.setText(item_.getSource());
-        dstPanel_.setText(destValue);    
+        dstPanel_.setText(destValue);
     }
-
 }

@@ -5,7 +5,7 @@ import javax.swing.JTabbedPane;
 
 import com.jamasoftware.services.restclient.JamaConfig;
 
-public class MainGUI extends JFrame implements IJamaConfigEventListener{
+public class MainGUI extends JFrame implements IJamaConfigEventListener {
 	private static final int TABINDEX_SETTING = 0;
 	private static final int TABINDEX_REPLACE = 1;
 
@@ -13,20 +13,18 @@ public class MainGUI extends JFrame implements IJamaConfigEventListener{
 	private SettingConnectionTab settingGUI_;
 	private ReplaceTab replaceGUI_;
 
-    public MainGUI() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	public MainGUI() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Jama Connect Replacer");
 		setBounds(0, 0, 600, 500);
-        buildGui();
-    }
+		buildGui();
+	}
 
+	private void buildGui() {
 
-    private void buildGui() {
-        
-        // JTabbedPane
+		// JTabbedPane
 		tabbedPane_ = new JTabbedPane();
 		add(tabbedPane_);
-		
 
 		settingGUI_ = new SettingConnectionTab(this);
 		tabbedPane_.addTab("Connection Setting", settingGUI_);
@@ -38,21 +36,20 @@ public class MainGUI extends JFrame implements IJamaConfigEventListener{
 	}
 
 	@Override
-    public void SettingChanged(JamaConfig config) {
-		if(settingGUI_ == null) {
+	public void SettingChanged(JamaConfig config) {
+		if (settingGUI_ == null) {
 			return;
 		}
 
-        if(config != null) {
+		if (config != null) {
 			tabbedPane_.setEnabledAt(TABINDEX_REPLACE, true);
 			tabbedPane_.setSelectedIndex(TABINDEX_REPLACE);
-            replaceGUI_.setConfig(config);
-        } else {
+			replaceGUI_.setConfig(config);
+		} else {
 			tabbedPane_.setEnabledAt(TABINDEX_REPLACE, false);
 			tabbedPane_.setSelectedIndex(TABINDEX_SETTING);
-            replaceGUI_.setConfig(config);
-        }
-    }
-
+			replaceGUI_.setConfig(config);
+		}
+	}
 
 }

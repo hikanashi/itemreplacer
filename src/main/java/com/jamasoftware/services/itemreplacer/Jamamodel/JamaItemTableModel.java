@@ -17,10 +17,9 @@ import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaItem;
 
 public class JamaItemTableModel extends AbstractTableModel {
   private static final Logger logger_ = LogManager.getLogger(JamaItemTableModel.class);
-  private static final String[] tableTitles_ = { "Target", "ID", "Name", "LockedBy", "LockedDate"  };
+  private static final String[] tableTitles_ = { "Target", "ID", "Name", "LockedBy", "LockedDate" };
   private static final String TARGET_FIELD_NAME = "Name";
   private static final String TARGET_FIELD_DESCRIPTION = "Description";
-
 
   private JamaConfig jamaConfig_ = null;
   private JamaInstance jamaInstance_ = null;
@@ -139,7 +138,7 @@ public class JamaItemTableModel extends AbstractTableModel {
   }
 
   public JamaTableItem getValueItem(int rowIndex) {
-    if(rowIndex < 0 || models_.size() <= rowIndex) {
+    if (rowIndex < 0 || models_.size() <= rowIndex) {
       return null;
     }
 
@@ -160,8 +159,8 @@ public class JamaItemTableModel extends AbstractTableModel {
       return false;
     }
 
-    if(rootItem_ != null) {
-      if( rootItem_.getID() == itemid) {
+    if (rootItem_ != null) {
+      if (rootItem_.getID() == itemid) {
         return true;
       }
     }
@@ -171,7 +170,7 @@ public class JamaItemTableModel extends AbstractTableModel {
 
     try {
       JamaItem root = jamaInstance_.getItem(itemid);
-      if(root != null) {
+      if (root != null) {
         rootItem_ = new JamaTableItem(root);
         return true;
       } else {
@@ -200,11 +199,11 @@ public class JamaItemTableModel extends AbstractTableModel {
 
     try {
       clearTable();
-      searchItem (rootItem_.getItem(),fieldName, searchKey);
+      searchItem(rootItem_.getItem(), fieldName, searchKey);
       fireTableDataChanged();
       return true;
     } catch (Exception e) {
-      logger_.warn("search fail. field:" + fieldName + " key:"+ searchKey, e);
+      logger_.warn("search fail. field:" + fieldName + " key:" + searchKey, e);
       return false;
     }
   }
@@ -213,45 +212,45 @@ public class JamaItemTableModel extends AbstractTableModel {
 
     JamaTableItem item = new JamaTableItem(jamaParent);
     boolean matchkey = item.setSearchKey(fieldName, searchKey);
-    if(matchkey) {
+    if (matchkey) {
       models_.add(item);
     }
 
     try {
       List<JamaItem> childlen = jamaParent.getChildren();
-      if(childlen == null) {
+      if (childlen == null) {
         return;
       }
 
       for (JamaItem child : childlen) {
         searchItem(child, fieldName, searchKey);
-      }  
-    } catch ( Exception e) {
+      }
+    } catch (Exception e) {
       logger_.error(e);
     }
   }
 
-  public void replaceSelectedItem(Object value,  String replaceKey) throws RestClientException  {
-    JamaTableItem item = (JamaTableItem)value;
+  public void replaceSelectedItem(Object value, String replaceKey) throws RestClientException {
+    JamaTableItem item = (JamaTableItem) value;
     replaceSelectedItemInternal(item, replaceKey);
     models_.remove(item);
   }
 
   public void replaceAllItem(String replaceKey) throws RestClientException {
     Iterator<JamaTableItem> itr = models_.iterator();
- 
+
     while (itr.hasNext()) {
       JamaTableItem item = itr.next();
-        if(item.getTarget() != true) {
-          continue;
-        }
+      if (item.getTarget() != true) {
+        continue;
+      }
 
-        replaceSelectedItemInternal(item, replaceKey);
-        itr.remove();
+      replaceSelectedItemInternal(item, replaceKey);
+      itr.remove();
     }
   }
 
-  private void replaceSelectedItemInternal(JamaTableItem item,  String replaceKey) throws RestClientException  {
+  private void replaceSelectedItemInternal(JamaTableItem item, String replaceKey) throws RestClientException {
     if (item == null) {
       throw new RestClientException("Target item is not exist");
     }
