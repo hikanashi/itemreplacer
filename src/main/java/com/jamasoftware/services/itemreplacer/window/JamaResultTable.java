@@ -8,8 +8,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 import com.jamasoftware.services.itemreplacer.Jamamodel.JamaItemTableModel;
-import com.jamasoftware.services.restclient.exception.RestClientException;
-
 public class JamaResultTable extends JTable {
 
   private DifferenceDisplay diffdisplay_;
@@ -28,44 +26,15 @@ public class JamaResultTable extends JTable {
     getSelectionModel().addListSelectionListener(new ListSelectionListener() {
       @Override
       public void valueChanged(ListSelectionEvent e) {
-        diffdisplay_.setItem(getSelectedItem(), replaceKey_);
+        Object item = getSelectedItem();
+        if(item == null) {
+          return;
+        }
+        diffdisplay_.setItem(item, replaceKey_);
         diffdisplay_.setVisibleTop(true);
+        clearSelection();
       }
     });
-  }
-
-  public void setReplaceKey(String value) {
-    replaceKey_ = value;
-  }
-
-  public void replaceSelectedItem(String replaceKey) throws RestClientException {
-    JamaItemTableModel model = (JamaItemTableModel) getModel();
-    if (model == null) {
-      return;
-    }
-
-    int currentRow = getSelectedRow();
-    int nextRow = currentRow + 1;
-    model.replaceSelectedItem(getSelectedItem(), replaceKey);
-    if (nextRow < model.getRowCount()) {
-      changeSelection(nextRow, 1, false, false);
-    } else {
-      clearSelection();
-    }
-
-    model.fireTableRowsDeleted(currentRow, currentRow);
-    model.fireTableRowsUpdated(nextRow, nextRow);
-  }
-
-  public void replaceAllItem(String replaceKey) throws RestClientException {
-    JamaItemTableModel model = (JamaItemTableModel) getModel();
-    if (model == null) {
-      return;
-    }
-
-    model.replaceAllItem(replaceKey);
-    clearSelection();
-    model.fireTableDataChanged();
   }
 
   private Object getSelectedItem() {
@@ -77,4 +46,18 @@ public class JamaResultTable extends JTable {
     return model.getValueItem(getSelectedRow());
   }
 
+  public void setReplaceKey(String value) {
+    replaceKey_ = value;
+  }
+
+  public void replaceFinished() {
+    JamaItemTableModel model = (JamaItemTableModel) getModel();
+    if (model == null) {
+      return;
+    }
+
+    diffdisplay_.setVisibleTop(false);
+    clearSelection();
+    model.replaceItemFinished();
+  }
 }

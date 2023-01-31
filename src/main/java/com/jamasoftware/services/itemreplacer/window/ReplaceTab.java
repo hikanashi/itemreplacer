@@ -4,6 +4,9 @@ import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
+import java.util.List;
 import java.awt.event.ActionEvent;
 import java.awt.Dimension;
 
@@ -20,10 +23,13 @@ import javax.swing.text.MaskFormatter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jamasoftware.services.itemreplacer.Jamamodel.IJamaItemEventListener;
 import com.jamasoftware.services.itemreplacer.Jamamodel.JamaItemTableModel;
+import com.jamasoftware.services.itemreplacer.Jamamodel.JamaTableItem;
 import com.jamasoftware.services.restclient.JamaConfig;
+import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaItem;
 
-public class ReplaceTab extends JPanel {
+public class ReplaceTab extends JPanel implements IJamaItemEventListener {
     private static final Logger logger_ = LogManager.getLogger(ReplaceTab.class);
     private static final String LABEL_TEXT_NO_BASE_ITEM = "---- Set Base Item ID ----";
     private static final int MAX_COMBO_ELEMENT = 3;
@@ -36,8 +42,12 @@ public class ReplaceTab extends JPanel {
     private JComboBox<String> textReplaceKey_;
     private DefaultComboBoxModel<String> replaceKeyModel_;
     private JComboBox<String> textTargetField_;
-    private JamaResultTable jamaitemTable_;
 
+    private JButton buttonBaseItem_;
+    private JButton buttonReplaceChecked_;
+    private JButton buttonSearch_;
+
+    private JamaResultTable jamaitemTable_;
     private JamaItemTableModel serachResult_ = new JamaItemTableModel();
 
     public ReplaceTab() {
@@ -59,20 +69,21 @@ public class ReplaceTab extends JPanel {
         gridY = buildReplaceWord(gridY);
         gridY = buildSearchButton(gridY);
         gridY = buildSearchResultTable(gridY);
-        gridY = buildReplaceButton(gridY);
+        setBaseInputEnable(true);
+        setInputEnable(false);
     }
 
     private int buildBaseItem(int gridY) {
         int gridheight = 1;
 
-        JButton buttonBaseItem = new JButton("Set BaseItem");
-        buttonBaseItem.setHorizontalAlignment(JLabel.TRAILING);
-        buttonBaseItem.addActionListener(new ActionListener() {
+        buttonBaseItem_ = new JButton("Set BaseItem");
+        buttonBaseItem_.setHorizontalAlignment(JLabel.TRAILING);
+        buttonBaseItem_.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setBaseJamaItem();
             }
         });
-        setLayoutConstraints(buttonBaseItem, 0, gridY, 1, gridheight);
+        setLayoutConstraints(buttonBaseItem_, 0, gridY, 1, gridheight, GridBagConstraints.NONE);
 
         try {
             MaskFormatter jamaitemFormat = new MaskFormatter();
@@ -85,13 +96,13 @@ public class ReplaceTab extends JPanel {
 
             textBaseItem_.setHorizontalAlignment(JLabel.LEFT);
             textBaseItem_.setPreferredSize(new Dimension(150, 30));
-            setLayoutConstraints(textBaseItem_, 1, gridY, 1, gridheight);
+            setLayoutConstraints(textBaseItem_, 1, gridY, 1, gridheight, GridBagConstraints.HORIZONTAL);
         } catch (Exception e) {
             logger_.error("MaskFormatter error:", e);
         }
 
         labelBaseItem_ = new JLabel(LABEL_TEXT_NO_BASE_ITEM);
-        setLayoutConstraints(labelBaseItem_, 2, gridY, 1, gridheight);
+        setLayoutConstraints(labelBaseItem_, 2, gridY, 1, gridheight, GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
@@ -101,13 +112,19 @@ public class ReplaceTab extends JPanel {
 
         JLabel label = new JLabel("Target Field:");
         label.setHorizontalAlignment(JLabel.TRAILING);
-        setLayoutConstraints(label, 0, gridY, 1, gridheight);
+        setLayoutConstraints(label, 0, gridY, 1, gridheight, GridBagConstraints.NONE);
 
         textTargetField_ = new JComboBox<String>(serachResult_.getFieldList());
         textTargetField_.setEditable(false);
         textTargetField_.setPreferredSize(new Dimension(400, 30));
         textTargetField_.setEnabled(false);
-        setLayoutConstraints(textTargetField_, 1, gridY, 2, gridheight);
+        textTargetField_.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                serachResult_.clearTable();
+            }
+        });
+        setLayoutConstraints(textTargetField_, 1, gridY, 2, gridheight, GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
@@ -117,7 +134,7 @@ public class ReplaceTab extends JPanel {
 
         JLabel label = new JLabel("Before replacement:");
         label.setHorizontalAlignment(JLabel.TRAILING);
-        setLayoutConstraints(label, 0, gridY, 1, gridheight);
+        setLayoutConstraints(label, 0, gridY, 1, gridheight, GridBagConstraints.NONE);
 
         String[] combodata = { "" };
         searchKeyModel_ = new DefaultComboBoxModel<String>(combodata);
@@ -125,7 +142,7 @@ public class ReplaceTab extends JPanel {
         textSearchKey_.setEditable(true);
         textSearchKey_.setPreferredSize(new Dimension(400, 30));
         textSearchKey_.setEnabled(false);
-        setLayoutConstraints(textSearchKey_, 1, gridY, 2, gridheight);
+        setLayoutConstraints(textSearchKey_, 1, gridY, 2, gridheight, GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
@@ -135,7 +152,7 @@ public class ReplaceTab extends JPanel {
 
         JLabel label = new JLabel("After replacement:");
         label.setHorizontalAlignment(JLabel.TRAILING);
-        setLayoutConstraints(label, 0, gridY, 1, gridheight);
+        setLayoutConstraints(label, 0, gridY, 1, gridheight, GridBagConstraints.NONE);
 
         String[] combodata = { "" };
         replaceKeyModel_ = new DefaultComboBoxModel<String>(combodata);
@@ -148,7 +165,7 @@ public class ReplaceTab extends JPanel {
                 changeReplaceKey();
             }
         });
-        setLayoutConstraints(textReplaceKey_, 1, gridY, 2, gridheight);
+        setLayoutConstraints(textReplaceKey_, 1, gridY, 2, gridheight, GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
@@ -156,13 +173,26 @@ public class ReplaceTab extends JPanel {
     private int buildSearchButton(int gridY) {
         int gridheight = 1;
 
-        JButton buttonSearch = new JButton("Search");
-        buttonSearch.addActionListener(new ActionListener() {
+        JLabel label = new JLabel("Search Result");
+        label.setHorizontalAlignment(JLabel.TRAILING);
+        setLayoutConstraints(label, 0, gridY, 1, gridheight, GridBagConstraints.NONE);
+
+        buttonSearch_ = new JButton("Search");
+        buttonSearch_.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 searchJamaItem();
             }
         });
-        setLayoutConstraints(buttonSearch, 0, gridY, 3, gridheight);
+        setLayoutConstraints(buttonSearch_, 1, gridY, 1, gridheight, GridBagConstraints.NONE);
+
+        buttonReplaceChecked_ = new JButton("Replace checked items");
+        buttonReplaceChecked_.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                replaceJamaItem();
+            }
+        });
+
+        setLayoutConstraints(buttonReplaceChecked_, 2, gridY, 1, gridheight, GridBagConstraints.NONE);
 
         return gridY + gridheight;
     }
@@ -171,42 +201,34 @@ public class ReplaceTab extends JPanel {
         int gridheight = 2;
         jamaitemTable_ = new JamaResultTable(serachResult_);
         JTableHeader header = jamaitemTable_.getTableHeader();
-        setLayoutConstraints(header, 0, gridY, 3, 1);
-        setLayoutConstraints(jamaitemTable_, 0, gridY + 1, 3, 1);
+        setLayoutConstraints(header, 0, gridY, 3, 1, GridBagConstraints.HORIZONTAL);
+        setLayoutConstraints(jamaitemTable_, 0, gridY + 1, 3, 1,GridBagConstraints.BOTH);
 
         return gridY + gridheight;
     }
 
-    private int buildReplaceButton(int gridY) {
-        int gridheight = 1;
-        JButton buttonReplace = new JButton("Replace");
-        buttonReplace.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                replaceJamaItem(true);
-            }
-        });
-        setLayoutConstraints(buttonReplace, 1, gridY, 1, gridheight);
-
-        JButton buttonReplaceAll = new JButton("Replace All");
-        buttonReplaceAll.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                replaceJamaItem(false);
-            }
-        });
-
-        setLayoutConstraints(buttonReplaceAll, 2, gridY, 1, gridheight);
-
-        return gridY + gridheight;
-    }
-
-    private void setLayoutConstraints(Component comp, int gridx, int gridy, int gridwidth, int gridheight) {
+    private void setLayoutConstraints(Component comp, int gridx, int gridy, int gridwidth, int gridheight,int fill) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = gridx;
         constraints.gridy = gridy;
         constraints.gridwidth = gridwidth;
         constraints.gridheight = gridheight;
+        constraints.fill = fill;
         layout_.setConstraints(comp, constraints);
         this.add(comp);
+    }
+
+    private void setBaseInputEnable(boolean enable) {
+        textBaseItem_.setEnabled(enable);
+        buttonBaseItem_.setEnabled(enable);
+    }
+
+    private void setInputEnable(boolean enable) {
+        buttonSearch_.setEnabled(enable);
+        buttonReplaceChecked_.setEnabled(enable);
+        textSearchKey_.setEnabled(enable);
+        textReplaceKey_.setEnabled(enable);
+        textTargetField_.setEnabled(enable);
     }
 
     private void changeReplaceKey() {
@@ -224,26 +246,45 @@ public class ReplaceTab extends JPanel {
             }
 
             int baseitem_id = Integer.valueOf(baseitem);
-            serachResult_.setRootItem(baseitem_id);
-            String rootName = serachResult_.getRootName();
 
-            if (rootName != null) {
-                labelBaseItem_.setText(rootName);
-                textSearchKey_.setEnabled(true);
-                textReplaceKey_.setEnabled(true);
-                textTargetField_.setEnabled(true);
-            } else {
-                labelBaseItem_.setText(LABEL_TEXT_NO_BASE_ITEM);
-                textSearchKey_.setEnabled(false);
-                textReplaceKey_.setEnabled(false);
-                textTargetField_.setEnabled(false);
-                JOptionPane.showMessageDialog(this, "Not Found Base Item");
+            boolean result = serachResult_.searchRootItem(baseitem_id, this);
+            if( result ) {
+                setBaseInputEnable(false);
+                setInputEnable(false);
             }
 
         } catch (Exception e) {
             logger_.error("search Base Item faild:", e);
             labelBaseItem_.setText(LABEL_TEXT_NO_BASE_ITEM);
             JOptionPane.showMessageDialog(this, "Root Item get faild");
+        }
+    }
+
+    @Override
+    public void GetFinished(JamaItem item) {
+        setBaseInputEnable(true);
+        try {
+            serachResult_.setRootItem(item);
+            String rootName = serachResult_.getRootName();
+            if (rootName != null) {
+                labelBaseItem_.setText(rootName);
+                textSearchKey_.setEnabled(true);
+                textReplaceKey_.setEnabled(true);
+                textTargetField_.setEnabled(true);
+                setInputEnable(true);
+            } else {
+                labelBaseItem_.setText(LABEL_TEXT_NO_BASE_ITEM);
+                textSearchKey_.setEnabled(false);
+                textReplaceKey_.setEnabled(false);
+                textTargetField_.setEnabled(false);
+                JOptionPane.showMessageDialog(this, "Not Found Base Item");
+                setInputEnable(false);
+            }
+        } catch (Exception e) {
+            logger_.error("Get Base Item faild:" + e.getMessage(), e);
+            labelBaseItem_.setText(LABEL_TEXT_NO_BASE_ITEM);
+            setInputEnable(false);
+            JOptionPane.showMessageDialog(this, "Root Item get faild");            
         }
     }
 
@@ -256,29 +297,49 @@ public class ReplaceTab extends JPanel {
             }
 
             String fieldName = (String) textTargetField_.getSelectedItem();
-            String searchKey = (String) textSearchKey_.getSelectedItem();
             if (fieldName.length() < 1) {
                 JOptionPane.showMessageDialog(this, "Please input Fieldname");
                 return;
             }
 
+            String searchKey = (String) textSearchKey_.getSelectedItem();
             if (searchKey.length() < 1) {
                 JOptionPane.showMessageDialog(this, "Please input search key");
                 return;
             }
 
             addComboElement(searchKeyModel_, searchKey);
-
-            serachResult_.searchItem(fieldName, searchKey);
-            JOptionPane.showMessageDialog(this, "Search Finish. Result:" + serachResult_.getRowCount());
+            boolean result = serachResult_.searchItem(fieldName, searchKey, this);
+            if( result ) {
+                setBaseInputEnable(false);
+                setInputEnable(false);
+            }
 
         } catch (Exception e) {
-            logger_.error("can't save setting:", e);
-            JOptionPane.showMessageDialog(this, e.getMessage());
+            logger_.error("Search Exception:"+ e.getMessage(), e);
+            JOptionPane.showMessageDialog(this, "Search Exception:"+ e.getMessage()); 
         }
     }
 
-    private void replaceJamaItem(boolean selectedonly) {
+    @Override
+    public void SearchProgress(List<JamaTableItem> results) {
+        serachResult_.searchItemProgress(results);
+    }
+
+    @Override
+    public void SearchFinished(boolean result) {
+        serachResult_.searchItemFinished();
+        setInputEnable(true);
+        setBaseInputEnable(true);
+        if( result == true) {
+            JOptionPane.showMessageDialog(this, "Search Finish. Result:" + serachResult_.getRowCount());
+        } else {
+            JOptionPane.showMessageDialog(this, "Search Faild"); 
+        }
+    }
+
+    
+    private void replaceJamaItem() {
         try {
             String rootName = serachResult_.getRootName();
             if (rootName == null) {
@@ -293,17 +354,32 @@ public class ReplaceTab extends JPanel {
             }
 
             addComboElement(replaceKeyModel_, replaceKey);
-
-            if (selectedonly) {
-                jamaitemTable_.replaceSelectedItem(replaceKey);
-            } else {
-                jamaitemTable_.replaceAllItem(replaceKey);
+            boolean result = serachResult_.replaceTargetItem(replaceKey, this);
+            if( result ) {
+                setBaseInputEnable(false);
+                setInputEnable(false);
             }
 
-            JOptionPane.showMessageDialog(this, "Replace Finish");
         } catch (Exception e) {
-            logger_.error("Replace Faild:", e);
-            JOptionPane.showMessageDialog(this, e.getMessage());
+            logger_.error("Replace Exception:" + e.getMessage(), e);
+            JOptionPane.showMessageDialog(this, "Replace Exception:"+ e.getMessage()); 
+        }
+    }
+
+    @Override
+    public void ReplaceProgress(List<JamaTableItem> results) {
+        serachResult_.searchItemProgress(results);
+    }
+
+    @Override
+    public void ReplaceFinished(boolean result) {
+        jamaitemTable_.replaceFinished();
+        setInputEnable(true);
+        setBaseInputEnable(true);
+        if( result == true) {
+            JOptionPane.showMessageDialog(this, "Replace Finish");
+        } else {
+            JOptionPane.showMessageDialog(this, "Replace Faild"); 
         }
     }
 

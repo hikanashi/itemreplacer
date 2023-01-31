@@ -6,25 +6,20 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.jamasoftware.services.restclient.JamaConfig;
-import com.jamasoftware.services.restclient.exception.RestClientException;
 // import com.jamasoftware.services.restclient.httpconnection.TestHttpClient;
 import com.jamasoftware.services.restclient.jamadomain.core.JamaInstance;
 import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaItem;
 
 public class JamaItemTableModel extends AbstractTableModel {
-  private static final Logger logger_ = LogManager.getLogger(JamaItemTableModel.class);
-  private static final String[] tableTitles_ = { "Target", "ID", "Name", "LockedBy", "LockedDate" };
+  private static final String[] tableTitles_ = { "Target", "ID", "Name", "ItemPath", "LockedBy", "LockedDate" };
   private static final String TARGET_FIELD_NAME = "Name";
   private static final String TARGET_FIELD_DESCRIPTION = "Description";
 
   private JamaConfig jamaConfig_ = null;
   private JamaInstance jamaInstance_ = null;
   private JamaTableItem rootItem_ = null;
-  private ArrayList<JamaTableItem> models_ = new ArrayList<JamaTableItem>();
+  private List<JamaTableItem> models_ = new ArrayList<JamaTableItem>();
 
   public JamaItemTableModel() {
   }
@@ -43,7 +38,7 @@ public class JamaItemTableModel extends AbstractTableModel {
     }
   }
 
-  private void clearTable() {
+  public void clearTable() {
     models_.clear();
     fireTableDataChanged();
   }
@@ -66,6 +61,15 @@ public class JamaItemTableModel extends AbstractTableModel {
 
   @Override
   public boolean isCellEditable(int rowIndex, int columnIndex) {
+    JamaTableItem item = getValueItem(rowIndex);
+    if(item == null) {
+      return false;
+    }
+
+    if(item.isReplaced()) {
+      return false;
+    }
+
     if (columnIndex == 0) {
       return true;
     }
@@ -95,6 +99,10 @@ public class JamaItemTableModel extends AbstractTableModel {
       return String.class;
     }
 
+    if (columnIndex == 5) {
+      return String.class;
+    }
+
     return null;
   }
 
@@ -115,10 +123,14 @@ public class JamaItemTableModel extends AbstractTableModel {
     }
 
     if (columnIndex == 3) {
-      return item.getlockedby();
+      return item.getItemPath();
     }
 
     if (columnIndex == 4) {
+      return item.getlockedby();
+    }
+
+    if (columnIndex == 5) {
       return item.lastLockedDate();
     }
 
@@ -154,41 +166,36 @@ public class JamaItemTableModel extends AbstractTableModel {
     return rootItem_.getName();
   }
 
-  public boolean setRootItem(int itemid) {
+  public boolean setRootItem(JamaItem item) {
+    if (item != null) {
+      rootItem_ = new JamaTableItem(item);
+      return true;
+    } else {
+      rootItem_ = null;
+      return false;
+    }
+  }
+
+  public boolean searchRootItem(int itemid, IJamaItemEventListener listener) {
     if (jamaInstance_ == null) {
       return false;
     }
 
     if (rootItem_ != null) {
       if (rootItem_.getID() == itemid) {
-        return true;
+        return false;
       }
     }
 
     clearTable();
     rootItem_ = null;
 
-    try {
-      JamaItem root = jamaInstance_.getItem(itemid);
-      if (root != null) {
-        rootItem_ = new JamaTableItem(root);
-        return true;
-      } else {
-        rootItem_ = null;
-        return false;
-      }
-    } catch (Exception e) {
-      logger_.warn("Root JamaItem can't get id:" + itemid, e);
-      return false;
-    }
+    GetJamaItemWorker getItemWoker = new GetJamaItemWorker(jamaInstance_, itemid, listener);
+    getItemWoker.execute();
+    return true;
   }
 
-  public String[] getFieldList() {
-    String[] fields = { TARGET_FIELD_DESCRIPTION, TARGET_FIELD_NAME };
-    return fields;
-  }
-
-  public boolean searchItem(String fieldName, String searchKey) {
+  public boolean searchItem(String fieldName, String searchKey, IJamaItemEventListener listener) {
     if (jamaInstance_ == null) {
       return false;
     }
@@ -197,64 +204,56 @@ public class JamaItemTableModel extends AbstractTableModel {
       return false;
     }
 
-    try {
-      clearTable();
-      searchItem(rootItem_.getItem(), fieldName, searchKey);
-      fireTableDataChanged();
-      return true;
-    } catch (Exception e) {
-      logger_.warn("search fail. field:" + fieldName + " key:" + searchKey, e);
-      return false;
-    }
+    clearTable();
+    SearchJamaItemWorker searchItemWorker = new SearchJamaItemWorker(rootItem_.getItem(), fieldName, searchKey, listener);
+    searchItemWorker.execute();
+    return true;
   }
 
-  private void searchItem(JamaItem jamaParent, String fieldName, String searchKey) throws RestClientException {
-
-    JamaTableItem item = new JamaTableItem(jamaParent);
-    boolean matchkey = item.setSearchKey(fieldName, searchKey);
-    if (matchkey) {
+  public void searchItemProgress(List<JamaTableItem> results) {
+    int beforeRow = models_.size();
+    for(JamaTableItem item : results) {
       models_.add(item);
     }
 
-    try {
-      List<JamaItem> childlen = jamaParent.getChildren();
-      if (childlen == null) {
-        return;
-      }
+    int afterRow = models_.size();
+    fireTableRowsInserted(beforeRow, afterRow);
+  }
 
-      for (JamaItem child : childlen) {
-        searchItem(child, fieldName, searchKey);
-      }
-    } catch (Exception e) {
-      logger_.error(e);
+  public void searchItemFinished() {
+    fireTableDataChanged();  
+  }
+
+  public String[] getFieldList() {
+    String[] fields = { TARGET_FIELD_DESCRIPTION, TARGET_FIELD_NAME };
+    return fields;
+  }
+
+  public boolean replaceTargetItem(String replaceKey, IJamaItemEventListener listener) {
+    ReplaceJamaItemWorker searchItemWorker = new ReplaceJamaItemWorker(models_, replaceKey, listener);
+    searchItemWorker.execute();
+    return true;
+  }
+
+  public void replaceItemProgress(List<JamaTableItem> results) {
+    if(results.size() < 1) {
+      return;
     }
+
+    int firstRow = models_.indexOf(results.get(0));
+    int lastRow = models_.indexOf(results.get(results.size()-1));
+    fireTableRowsUpdated(firstRow, lastRow);
   }
 
-  public void replaceSelectedItem(Object value, String replaceKey) throws RestClientException {
-    JamaTableItem item = (JamaTableItem) value;
-    replaceSelectedItemInternal(item, replaceKey);
-    models_.remove(item);
-  }
-
-  public void replaceAllItem(String replaceKey) throws RestClientException {
+  public void replaceItemFinished() {
     Iterator<JamaTableItem> itr = models_.iterator();
-
     while (itr.hasNext()) {
       JamaTableItem item = itr.next();
-      if (item.getTarget() != true) {
+      if (item.isReplaced() != true) {
         continue;
       }
-
-      replaceSelectedItemInternal(item, replaceKey);
       itr.remove();
     }
-  }
-
-  private void replaceSelectedItemInternal(JamaTableItem item, String replaceKey) throws RestClientException {
-    if (item == null) {
-      throw new RestClientException("Target item is not exist");
-    }
-
-    item.replaceItem(replaceKey);
+    fireTableDataChanged();  
   }
 }

@@ -6,7 +6,7 @@
 
   <groupId>com.jamasoftware.services</groupId>
   <artifactId>itemreplacer</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
 
   <name>itemreplacer</name>
   <url>https://github.com/hikanashi/itemreplacer</url>
@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.jamasoftware.services</groupId>
       <artifactId>rest-client</artifactId>
-      <version>1.0.2</version>
+      <version>1.0.3</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

@@ -2,9 +2,12 @@ package com.jamasoftware.services.itemreplacer.window;
 
 import java.awt.Component;
 import java.awt.GridBagLayout;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.GridBagConstraints;
-import java.awt.Dimension;
+// import java.awt.Dimension;
 
+import javax.swing.JComboBox;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -17,6 +20,7 @@ import com.jamasoftware.services.itemreplacer.Jamamodel.JamaTableItem;
 public class DifferenceDisplay extends JFrame {
 
     private GridBagLayout layout_;
+    private JComboBox<String> textMediaType_;
     private JEditorPane srcPanel_;
     private JEditorPane dstPanel_;
     private String replaceKey_ = null;
@@ -32,28 +36,49 @@ public class DifferenceDisplay extends JFrame {
         this.setLayout(layout_);
 
         setTitle("Different View");
-        setBounds(0, 0, 810, 810);
+        setBounds(0, 0, 400, 600);
         setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+
+        textMediaType_ = buildChangeButton();
+        setLayoutConstraints(textMediaType_, 0, 0, 3, 1, GridBagConstraints.NONE);
 
         int gridX = 0;
         srcPanel_ = buildDataView();
-        setLayoutConstraints(srcPanel_, gridX++, 0, 1, 5);
+        setLayoutConstraints(srcPanel_, gridX++, 1, 1, 1, GridBagConstraints.BOTH);
         JSeparator separator = buildSeparator();
-        setLayoutConstraints(separator, gridX++, 0, 1, 1);
+        setLayoutConstraints(separator, gridX++, 1, 1, 1, GridBagConstraints.VERTICAL);
         dstPanel_ = buildDataView();
-        setLayoutConstraints(dstPanel_, gridX++, 0, 1, 5);
+        setLayoutConstraints(dstPanel_, gridX++, 1, 1, 1, GridBagConstraints.BOTH);
     }
 
-    public void setVisibleTop(boolean visible) {
-        if (visible) {
-            setAlwaysOnTop(true);
+
+
+    private JComboBox<String> buildChangeButton() {
+        String[] mediatypes = { "text/html", "text/text" };
+        JComboBox<String> mediaTypeBox = new JComboBox<String>(mediatypes);
+        mediaTypeBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                changeMediaType();
+            }
+        });
+        return mediaTypeBox;
+    }
+
+    private void changeMediaType() {
+        if(item_ == null ) {
+            return;
         }
-
-        setEnabled(visible);
-        setVisible(visible);
-        setAlwaysOnTop(false);
-
+        
+        String destValue = item_.getReplaceData(replaceKey_);
+        updateContent(srcPanel_, item_.getSource());
+        updateContent(dstPanel_, destValue);
     }
+
+    private String getMediaType() {
+        return (String) textMediaType_.getSelectedItem();
+    }
+
 
     private JSeparator buildSeparator() {
         JSeparator separator = new JSeparator(JSeparator.VERTICAL);
@@ -67,44 +92,36 @@ public class DifferenceDisplay extends JFrame {
 
     private JEditorPane buildDataView() {
 
-        JEditorPane panel = new JEditorPane("text/html", "");
+        String type = getMediaType();
+        JEditorPane panel = new JEditorPane(type, "");
         panel.setEditable(false);
-        panel.setPreferredSize(new Dimension(400, 800));
+        // panel.setPreferredSize(new Dimension(400, 800));
 
         JScrollPane scrollPane = new JScrollPane(panel);
         scrollPane.setViewportView(panel);
         return panel;
     }
 
-    private void setLayoutConstraints(Component comp, int gridx, int gridy, int gridwidth, int gridheight) {
+    private void setLayoutConstraints(Component comp, int gridx, int gridy, int gridwidth, int gridheight, int fill) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = gridx;
         constraints.gridy = gridy;
         constraints.gridwidth = gridwidth;
         constraints.gridheight = gridheight;
+        constraints.fill = fill;
         layout_.setConstraints(comp, constraints);
         this.add(comp);
     }
 
     public void setItem(Object item, String key) {
-        String type = "text/html";
-
         item_ = (JamaTableItem) item;
         if (item_ == null) {
-            updateContent(srcPanel_, type, "");
-            updateContent(dstPanel_, type, "");
+            updateContent(srcPanel_, "");
+            updateContent(dstPanel_, "");
             return;
         }
 
         setReplaceKey(key);
-    }
-
-    private void updateContent(JEditorPane panel, String type, String value) {
-        panel.setEditable(true);
-        panel.setText("");
-        panel.setContentType(type);
-        panel.setText(value);
-        panel.setEditable(false);
     }
 
     public void setReplaceKey(String key) {
@@ -115,7 +132,28 @@ public class DifferenceDisplay extends JFrame {
         }
 
         String destValue = item_.getReplaceData(replaceKey_);
-        srcPanel_.setText(item_.getSource());
-        dstPanel_.setText(destValue);
+        updateContent(srcPanel_, item_.getSource());
+        updateContent(dstPanel_, destValue);
+    }
+
+
+    private void updateContent(JEditorPane panel, String value) {
+        String type = getMediaType();
+        panel.setEditable(true);
+        panel.setText("");
+        panel.setContentType(type);
+        panel.setText(value);
+        panel.setEditable(false);
+    }
+
+
+    public void setVisibleTop(boolean visible) {
+        if (visible) {
+            setAlwaysOnTop(true);
+        }
+
+        setEnabled(visible);
+        setVisible(visible);
+        setAlwaysOnTop(false);
     }
 }
