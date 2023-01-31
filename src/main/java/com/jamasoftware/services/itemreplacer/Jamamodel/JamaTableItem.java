@@ -6,8 +6,10 @@ import java.util.regex.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.jamasoftware.services.restclient.JamaParent;
 import com.jamasoftware.services.restclient.exception.RestClientException;
 import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaItem;
+import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaProject;
 import com.jamasoftware.services.restclient.jamadomain.stagingresources.StagingItem;
 import com.jamasoftware.services.restclient.jamadomain.values.JamaFieldValue;
 import com.jamasoftware.services.restclient.jamadomain.values.*;
@@ -17,6 +19,7 @@ public class JamaTableItem {
 
     private Boolean target_ = false;
     private JamaItem item_ = null;
+    private boolean isReplaced_ = false;
 
     private String fieldName_ = null;
     private Matcher matcher_ = null;
@@ -40,6 +43,10 @@ public class JamaTableItem {
 
     public String getSource() {
         return sourceValue_;
+    }
+
+    public boolean isReplaced() {
+        return isReplaced_;
     }
 
     public boolean setSearchKey(String field, String searchKey) throws RestClientException {
@@ -68,6 +75,10 @@ public class JamaTableItem {
     }
 
     public int getID() {
+        if(item_ == null) {
+            return -1;
+        }
+
         Integer id = item_.getId();
         if (id != null) {
             return id.intValue();
@@ -77,15 +88,45 @@ public class JamaTableItem {
     }
 
     public String getName() {
+        if(item_ == null) {
+            return null;
+        }
+
         TextFieldValue value = item_.getName();
         if (value == null) {
-            return "";
+            return null;
         }
 
         return value.getValue();
     }
 
+    public String getItemPath() {
+        StringBuilder itemPath = new StringBuilder();
+        if(item_ == null) {
+            return itemPath.toString();
+        }
+
+        JamaParent jamaParent = item_.getParent();
+        while(jamaParent != null) {
+            if(jamaParent.isProject()) {
+                JamaProject project = (JamaProject)jamaParent;
+                itemPath.append(project.getName() + "/");
+                break;
+            } else {
+                JamaItem item = (JamaItem)jamaParent;
+                itemPath.append(item.getName() + "/");
+                jamaParent = item.getParent();
+            }
+        }
+
+        return itemPath.toString();
+    }
+
     public String getlockedby() {
+        if(item_ == null) {
+            return "";
+        }
+
         if (item_.isLocked() != true) {
             return "";
         }
@@ -94,6 +135,10 @@ public class JamaTableItem {
     }
 
     public String lastLockedDate() {
+        if(item_ == null) {
+            return "";
+        }
+        
         if (item_.isLocked() != true) {
             return "";
         }
@@ -102,7 +147,10 @@ public class JamaTableItem {
     }
 
     private JamaFieldValue getFieldValue(JamaItem item, String fieldName) {
-        // JamaFieldValue fieldvalue = item_.getFieldValueByLabel(field);
+        if(fieldName.equalsIgnoreCase("name")) {
+            return item.getName();
+        }
+
         for (JamaFieldValue fieldValue : item.getFieldValues()) {
             logger_.debug("GetFieldValue id:" + item.getId() + " FieldName:" + fieldValue.getLabel());
             if (fieldValue.getLabel().equals(fieldName)) {
@@ -180,6 +228,7 @@ public class JamaTableItem {
         }
 
         stageitem.commit();
-
+        target_ = false;
+        isReplaced_ = true;
     }
 }
