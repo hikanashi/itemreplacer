@@ -1,2 +1,2 @@
 @echo off
-java -jar ./itemreplacer-0.0.1-jar-with-dependencies.jar
+java -jar ./itemreplacer-0.0.2-jar-with-dependencies.jar
