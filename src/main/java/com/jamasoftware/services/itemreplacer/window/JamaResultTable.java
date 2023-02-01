@@ -1,6 +1,5 @@
 package com.jamasoftware.services.itemreplacer.window;
 
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
@@ -16,9 +15,6 @@ public class JamaResultTable extends JTable {
   public JamaResultTable(AbstractTableModel model) {
     setModel(model);
     setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-    JScrollPane scrollPane = new JScrollPane(this);
-    scrollPane.setViewportView(this);
 
     diffdisplay_ = new DifferenceDisplay();
     diffdisplay_.setVisibleTop(false);

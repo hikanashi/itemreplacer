@@ -110,6 +110,10 @@ public class JamaItemTableModel extends AbstractTableModel {
   public Object getValueAt(int rowIndex, int columnIndex) {
     JamaTableItem item = getValueItem(rowIndex);
 
+    if(item == null) {
+      return null;
+    }
+
     if (columnIndex == 0) {
       return item.getTarget();
     }
@@ -140,6 +144,9 @@ public class JamaItemTableModel extends AbstractTableModel {
   @Override
   public void setValueAt(Object val, int rowIndex, int columnIndex) {
     JamaTableItem item = getValueItem(rowIndex);
+    if( item == null) {
+      return;
+    }
 
     if (columnIndex == 0) {
       Boolean value = (Boolean) val;

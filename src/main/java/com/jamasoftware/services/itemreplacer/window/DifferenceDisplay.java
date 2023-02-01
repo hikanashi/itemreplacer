@@ -44,11 +44,16 @@ public class DifferenceDisplay extends JFrame {
 
         int gridX = 0;
         srcPanel_ = buildDataView();
-        setLayoutConstraints(srcPanel_, gridX++, 1, 1, 1, GridBagConstraints.BOTH);
+        JScrollPane scrollPaneSrc = new JScrollPane();
+        scrollPaneSrc.setViewportView(srcPanel_);
+        setLayoutConstraints(scrollPaneSrc, gridX++, 1, 1, 1, GridBagConstraints.HORIZONTAL);
+
         JSeparator separator = buildSeparator();
         setLayoutConstraints(separator, gridX++, 1, 1, 1, GridBagConstraints.VERTICAL);
         dstPanel_ = buildDataView();
-        setLayoutConstraints(dstPanel_, gridX++, 1, 1, 1, GridBagConstraints.BOTH);
+        JScrollPane scrollPaneDst = new JScrollPane();
+        scrollPaneDst.setViewportView(srcPanel_);
+        setLayoutConstraints(scrollPaneDst, gridX++, 1, 1, 1, GridBagConstraints.HORIZONTAL);
     }
 
 
@@ -95,10 +100,6 @@ public class DifferenceDisplay extends JFrame {
         String type = getMediaType();
         JEditorPane panel = new JEditorPane(type, "");
         panel.setEditable(false);
-        // panel.setPreferredSize(new Dimension(400, 800));
-
-        JScrollPane scrollPane = new JScrollPane(panel);
-        scrollPane.setViewportView(panel);
         return panel;
     }
 
