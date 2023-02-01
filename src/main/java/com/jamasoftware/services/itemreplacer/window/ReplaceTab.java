@@ -17,6 +17,7 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.table.JTableHeader;
 import javax.swing.text.MaskFormatter;
 
@@ -200,9 +201,12 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
     private int buildSearchResultTable(int gridY) {
         int gridheight = 2;
         jamaitemTable_ = new JamaResultTable(serachResult_);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(jamaitemTable_);
+
         JTableHeader header = jamaitemTable_.getTableHeader();
         setLayoutConstraints(header, 0, gridY, 3, 1, GridBagConstraints.HORIZONTAL);
-        setLayoutConstraints(jamaitemTable_, 0, gridY + 1, 3, 1,GridBagConstraints.BOTH);
+        setLayoutConstraints(scrollPane, 0, gridY + 1, 3, 1,GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
