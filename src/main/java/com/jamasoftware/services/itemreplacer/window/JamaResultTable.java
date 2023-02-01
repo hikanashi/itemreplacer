@@ -1,13 +1,16 @@
 package com.jamasoftware.services.itemreplacer.window;
 
-import javax.swing.JScrollPane;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 import com.jamasoftware.services.itemreplacer.Jamamodel.JamaItemTableModel;
+import com.jamasoftware.services.itemreplacer.Jamamodel.JamaTableItem;
 public class JamaResultTable extends JTable {
 
   private DifferenceDisplay diffdisplay_;
@@ -16,34 +19,27 @@ public class JamaResultTable extends JTable {
   public JamaResultTable(AbstractTableModel model) {
     setModel(model);
     setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-    JScrollPane scrollPane = new JScrollPane(this);
-    scrollPane.setViewportView(this);
+    model.addTableModelListener(new DiffViewHandler());
 
     diffdisplay_ = new DifferenceDisplay();
     diffdisplay_.setVisibleTop(false);
 
-    getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+    diffdisplay_.addWindowListener(new WindowAdapter() {
       @Override
-      public void valueChanged(ListSelectionEvent e) {
-        Object item = getSelectedItem();
+      public void windowClosing(WindowEvent e) {
+        JamaTableItem item = diffdisplay_.getItem();
         if(item == null) {
           return;
         }
-        diffdisplay_.setItem(item, replaceKey_);
-        diffdisplay_.setVisibleTop(true);
-        clearSelection();
+
+        JamaItemTableModel model = (JamaItemTableModel) getModel();
+        if (model == null) {
+          return;
+        }
+
+        model.setViewDiff(item, false);
       }
     });
-  }
-
-  private Object getSelectedItem() {
-    JamaItemTableModel model = (JamaItemTableModel) getModel();
-    if (model == null) {
-      return null;
-    }
-
-    return model.getValueItem(getSelectedRow());
   }
 
   public void setReplaceKey(String value) {
@@ -59,5 +55,34 @@ public class JamaResultTable extends JTable {
     diffdisplay_.setVisibleTop(false);
     clearSelection();
     model.replaceItemFinished();
+  }
+
+  class DiffViewHandler implements TableModelListener {
+    
+    @Override
+    public void tableChanged(TableModelEvent e) {
+      if(e.getType() != TableModelEvent.UPDATE) {
+        return;
+      }
+
+      if(e.getColumn() != JamaItemTableModel.COLUMN_DIFFVIEW) {
+        return;
+      }
+
+      JamaItemTableModel model = (JamaItemTableModel) getModel();
+      if (model == null) {
+        return;
+      }
+      
+      JamaTableItem targetItem = model.getValueItem(e.getFirstRow());
+      if( targetItem.getViewDiff() ) {
+        diffdisplay_.setItem(targetItem, replaceKey_);
+        diffdisplay_.setVisibleTop(true);
+      } else {
+        if(targetItem == diffdisplay_.getItem() ) {
+          diffdisplay_.setVisibleTop(false);
+        }
+      }
+    }
   }
 }
