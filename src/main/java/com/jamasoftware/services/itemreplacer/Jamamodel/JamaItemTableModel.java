@@ -7,14 +7,16 @@ import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
 import com.jamasoftware.services.restclient.JamaConfig;
+// TODO: for debug
 // import com.jamasoftware.services.restclient.httpconnection.TestHttpClient;
 import com.jamasoftware.services.restclient.jamadomain.core.JamaInstance;
 import com.jamasoftware.services.restclient.jamadomain.lazyresources.JamaItem;
 
 public class JamaItemTableModel extends AbstractTableModel {
-  private static final String[] tableTitles_ = { "Target", "ID", "Name", "ItemPath", "LockedBy", "LockedDate" };
+  private static final String[] tableTitles_ = { "Target", "ID", "Name", "ItemPath", "LockedBy", "LockedDate", "DiffView" };
   private static final String TARGET_FIELD_NAME = "Name";
   private static final String TARGET_FIELD_DESCRIPTION = "Description";
+  public static final int COLUMN_DIFFVIEW = 6;
 
   private JamaConfig jamaConfig_ = null;
   private JamaInstance jamaInstance_ = null;
@@ -74,6 +76,10 @@ public class JamaItemTableModel extends AbstractTableModel {
       return true;
     }
 
+    if (columnIndex == COLUMN_DIFFVIEW) {
+      return true;
+    }
+
     return false;
   }
 
@@ -101,6 +107,10 @@ public class JamaItemTableModel extends AbstractTableModel {
 
     if (columnIndex == 5) {
       return String.class;
+    }
+
+    if (columnIndex == COLUMN_DIFFVIEW) {
+      return Boolean.class;
     }
 
     return null;
@@ -134,6 +144,10 @@ public class JamaItemTableModel extends AbstractTableModel {
       return item.lastLockedDate();
     }
 
+    if (columnIndex == COLUMN_DIFFVIEW) {
+      return item.getViewDiff();
+    }
+
     return null;
   }
 
@@ -145,7 +159,15 @@ public class JamaItemTableModel extends AbstractTableModel {
       Boolean value = (Boolean) val;
       item.setTarget(value.booleanValue());
       fireTableCellUpdated(rowIndex, columnIndex);
+      return;
     }
+
+    if (columnIndex == 6) {
+      Boolean value = (Boolean) val;
+      setViewDiff(item,value);
+      return;
+    }
+
     return;
   }
 
@@ -255,5 +277,32 @@ public class JamaItemTableModel extends AbstractTableModel {
       itr.remove();
     }
     fireTableDataChanged();  
+  }
+
+  public void setViewDiff(JamaTableItem targetitem, boolean viewdiff) {
+    if( targetitem == null ) {
+      return;
+    }
+
+
+    if(viewdiff == true) {
+      for(JamaTableItem item : models_) {
+        if(item.getViewDiff() == true ) {
+          fireItemViewDiffUpdated(item, viewdiff);          
+        }
+      }
+    }
+
+    fireItemViewDiffUpdated(targetitem, viewdiff);
+  }
+
+  private void fireItemViewDiffUpdated(JamaTableItem targetitem, boolean viewdiff) {
+    if( targetitem == null ) {
+      return;
+    }
+
+    targetitem.setViewDiff(viewdiff);
+    int indexRow = models_.indexOf(targetitem);
+    fireTableCellUpdated(indexRow, COLUMN_DIFFVIEW);  
   }
 }

@@ -27,17 +27,20 @@ public class DifferenceDisplay extends JFrame {
     private JamaTableItem item_ = null;
 
     public DifferenceDisplay() {
-
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         buildGUI();
     }
 
+    public JamaTableItem getItem() {
+        return item_;
+    }
+    
     private void buildGUI() {
         layout_ = new GridBagLayout();
         this.setLayout(layout_);
 
         setTitle("Different View");
         setBounds(0, 0, 400, 600);
-        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 
         textMediaType_ = buildChangeButton();
         setLayoutConstraints(textMediaType_, 0, 0, 3, 1, GridBagConstraints.NONE);

@@ -20,6 +20,7 @@ public class JamaTableItem {
     private Boolean target_ = false;
     private JamaItem item_ = null;
     private boolean isReplaced_ = false;
+    private Boolean viewdiff_ = false;
 
     private String fieldName_ = null;
     private Matcher matcher_ = null;
@@ -35,6 +36,14 @@ public class JamaTableItem {
 
     public void setTarget(boolean target) {
         target_ = target;
+    }
+
+    public boolean getViewDiff() {
+        return viewdiff_;
+    }
+
+    public void setViewDiff(boolean view) {
+        viewdiff_ = view;
     }
 
     public JamaItem getItem() {
