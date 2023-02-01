@@ -236,7 +236,14 @@ public class JamaTableItem {
             throw new RestClientException("That field type is not supported. field:" + fieldName_);
         }
 
+        boolean lockResult = stageitem.acquireLock();
+        if(lockResult != true) {
+            throw new RestClientException("Lock Faild itemid:"+ stageitem.getId() + " Name:" + stageitem.getName().getValue());
+        }
+
         stageitem.commit();
+        stageitem.unlock();
+
         target_ = false;
         isReplaced_ = true;
     }
