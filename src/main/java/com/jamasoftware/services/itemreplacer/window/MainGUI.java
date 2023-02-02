@@ -16,7 +16,7 @@ public class MainGUI extends JFrame implements IJamaConfigEventListener {
 	public MainGUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Jama Connect Replacer");
-		setBounds(0, 0, 600, 500);
+		setBounds(0, 0, 600, 700);
 		buildGui();
 	}
 

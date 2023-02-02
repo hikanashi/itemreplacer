@@ -169,7 +169,7 @@ public class JamaItemTableModel extends AbstractTableModel {
       return;
     }
 
-    if (columnIndex == 6) {
+    if (columnIndex == COLUMN_DIFFVIEW) {
       Boolean value = (Boolean) val;
       setViewDiff(item,value);
       return;
