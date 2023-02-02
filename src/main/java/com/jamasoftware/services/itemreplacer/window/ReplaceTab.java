@@ -1,6 +1,7 @@
 package com.jamasoftware.services.itemreplacer.window;
 
 import java.awt.Component;
+import java.awt.BorderLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.event.ActionListener;
@@ -35,7 +36,9 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
     private static final String LABEL_TEXT_NO_BASE_ITEM = "---- Set Base Item ID ----";
     private static final int MAX_COMBO_ELEMENT = 3;
 
-    private GridBagLayout layout_;
+    private JPanel subPanel_;
+    private GridBagLayout sublayout_;
+
     private JFormattedTextField textBaseItem_;
     private JLabel labelBaseItem_;
     private JComboBox<String> textSearchKey_;
@@ -60,8 +63,21 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
     }
 
     private void buildGUI() {
-        layout_ = new GridBagLayout();
-        this.setLayout(layout_);
+        setLayout(new BorderLayout());
+
+        buildItemPanel();  
+        JPanel tablePanel = buildSearchResultTable();
+        add(tablePanel, BorderLayout.CENTER);
+
+        setBaseInputEnable(true);
+        setInputEnable(false);
+    }
+
+
+    private void buildItemPanel() {
+        subPanel_ = new JPanel();
+        sublayout_ = new GridBagLayout();
+        subPanel_.setLayout(sublayout_);
 
         int gridY = 0;
         gridY = buildBaseItem(gridY);
@@ -69,9 +85,8 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
         gridY = buildSerchWord(gridY);
         gridY = buildReplaceWord(gridY);
         gridY = buildSearchButton(gridY);
-        gridY = buildSearchResultTable(gridY);
-        setBaseInputEnable(true);
-        setInputEnable(false);
+        add(subPanel_, BorderLayout.NORTH);
+        return;
     }
 
     private int buildBaseItem(int gridY) {
@@ -184,7 +199,7 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
                 searchJamaItem();
             }
         });
-        setLayoutConstraints(buttonSearch_, 1, gridY, 1, gridheight, GridBagConstraints.NONE);
+        setLayoutConstraints(buttonSearch_, 1, gridY, 1, gridheight, GridBagConstraints.HORIZONTAL);
 
         buttonReplaceChecked_ = new JButton("Replace checked items");
         buttonReplaceChecked_.addActionListener(new ActionListener() {
@@ -192,21 +207,7 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
                 replaceJamaItem();
             }
         });
-
-        setLayoutConstraints(buttonReplaceChecked_, 2, gridY, 1, gridheight, GridBagConstraints.NONE);
-
-        return gridY + gridheight;
-    }
-
-    private int buildSearchResultTable(int gridY) {
-        int gridheight = 2;
-        jamaitemTable_ = new JamaResultTable(serachResult_);
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(jamaitemTable_);
-
-        JTableHeader header = jamaitemTable_.getTableHeader();
-        setLayoutConstraints(header, 0, gridY, 3, 1, GridBagConstraints.HORIZONTAL);
-        setLayoutConstraints(scrollPane, 0, gridY + 1, 3, 1,GridBagConstraints.HORIZONTAL);
+        setLayoutConstraints(buttonReplaceChecked_, 2, gridY, 1, gridheight, GridBagConstraints.HORIZONTAL);
 
         return gridY + gridheight;
     }
@@ -218,8 +219,22 @@ public class ReplaceTab extends JPanel implements IJamaItemEventListener {
         constraints.gridwidth = gridwidth;
         constraints.gridheight = gridheight;
         constraints.fill = fill;
-        layout_.setConstraints(comp, constraints);
-        this.add(comp);
+        sublayout_.setConstraints(comp, constraints);
+        subPanel_.add(comp);
+    }
+
+    private JPanel buildSearchResultTable() {
+        jamaitemTable_ = new JamaResultTable(serachResult_);
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(jamaitemTable_);
+        JTableHeader header = jamaitemTable_.getTableHeader();
+
+        JPanel tablePanel = new JPanel();
+        tablePanel.setLayout(new BorderLayout());
+        tablePanel.add(header, BorderLayout.NORTH);
+        tablePanel.add(scrollPane, BorderLayout.SOUTH);
+
+        return tablePanel;
     }
 
     private void setBaseInputEnable(boolean enable) {
